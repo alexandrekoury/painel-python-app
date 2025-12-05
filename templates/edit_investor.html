@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h2 class="mb-3">Editar investor</h2>
+
+<form action="/update/{{ investor.id }}" method="POST" class="card card-body">
+
+    <input name="name" class="form-control mb-3"
+           value="{{ investor.alias }}" required>
+
+    <input name="description" class="form-control mb-3"
+           value="{{ investor.username }}">
+
+    <button class="btn btn-success">Salvar alterações</button>
+    <a href="/" class="btn btn-secondary ms-2">Cancelar</a>
+
+</form>
+
+{% endblock %}
