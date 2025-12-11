@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from config import DB_HOST, DB_NAME, DB_USER, DB_PASS, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SECRET_KEY
+from config import DB_HOST, DB_NAME, DB_USER, DB_PASS, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SECRET_KEY, ENV_TYPE
 from models import db
 from routes import register_blueprints
 from routes.auth import init_oauth
@@ -35,4 +35,4 @@ oauth = init_oauth(app)
 register_blueprints(app)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True if ENV_TYPE == "dev" else False)
