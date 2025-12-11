@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h2 class="mb-3">Editar Balance</h2>
+
+<form action="/exchange/balance/update/{{ balance.id }}" method="POST" class="card card-body">
+
+    <label for="exchange" class="form-label">{{ balance.exchange.name }} {{ balance.update_datetime }}</label>
+  
+    <input name="balance" class="form-control mb-3"
+           value="{{ balance.balance }}" required>
+
+    <input name="update_datetime" class="form-control mb-3"
+           value="{{ balance.update_datetime }}" required>
+
+    <button class="btn btn-success">Salvar alterações</button>
+    <a href="/" class="btn btn-secondary ms-2">Cancelar</a>
+
+</form>
+
+{% endblock %}

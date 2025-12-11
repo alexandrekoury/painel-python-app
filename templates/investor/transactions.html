@@ -29,6 +29,7 @@
             <td>{{ transaction.kind_currency.code }}</td>
             <td>{{ transaction.investor.alias }}</td>
             <td>{{ transaction.transaction_nav}}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteTransaction('{{ transaction.id }}')">Delete</button></td>
         </tr>
         {% endfor %}
     </tbody>

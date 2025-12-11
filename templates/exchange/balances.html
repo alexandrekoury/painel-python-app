@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h2 class="mb-4">Detailed Balances</h2>
+
+<form method="get" class="filter-form">
+    <input type="date" name="start_date" value="{{ start_date or '' }}">
+    <input type="date" name="end_date" value="{{ end_date or '' }}">
+    <input type="int" name="limit" value="{{ limit or '' }}" placeholder="Limit">
+    <button type="submit">Filter</button>
+    <a href="{{ url_for('exchange.list_balances') }}">Clear</a>
+</form>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Exchange</th>
+            <th>Strategy</th>
+            <th>Balance</th>
+            <th>Currency</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for balance in balances %}
+        <tr>
+            <td>{{ balance.id }}</td>
+            <td>{{ balance.exchange.name }}</td>
+            <td>{{ balance.strategy.name }}</td>
+            <td>{{ balance.balance }}</td>
+            <td>{{ balance.currency.code }}</td>
+            <td>{{ balance.update_datetime }}</td>
+            <td><a href="/exchange/balance/edit/{{ balance.id }}" class="btn btn-warning btn-sm">Editar</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

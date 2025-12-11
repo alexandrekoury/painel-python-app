@@ -1,19 +1,25 @@
 {% extends "layout.html" %}
 {% block content %}
 
-<h2 class="mb-4">Lista de Investors</h2>
-
-
-<div class="row">
+<h2 class="mb-4">Investors</h2>
+<div class="row mb-4">
     <div class="col-md-4">
-        <a href="/investors" class="btn btn-secondary w-100">Investors</a>
+        <a href="/investor" class="btn btn-secondary w-100">Investors</a>
     </div>
     <div class="col-md-4">
-        <a href="/investor_transactions" class="btn btn-secondary w-100">Investor Transactions</a>
+        <a href="/investor/transactions" class="btn btn-secondary w-100">Investor Transactions</a>
     </div>
 </div>
 
+<h2 class="mb-4">Exchanges</h2>
+<div class="row mb-4">
+    <div class="col-md-4">
+        <a href="/exchange/balances/consolidated" class="btn btn-secondary w-100">Consolidated Balances</a>
+    </div>
+    <div class="col-md-4">
+        <a href="/exchange/balances" class="btn btn-secondary w-100">Detailed Balances</a>
+    </div>
 
-
+</div>
 
 {% endblock %}

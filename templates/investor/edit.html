@@ -3,12 +3,12 @@
 
 <h2 class="mb-3">Editar investor</h2>
 
-<form action="/update/{{ investor.id }}" method="POST" class="card card-body">
+<form action="/investor/update/{{ investor.id }}" method="POST" class="card card-body">
 
-    <input name="name" class="form-control mb-3"
+    <input name="alias" class="form-control mb-3"
            value="{{ investor.alias }}" required>
 
-    <input name="description" class="form-control mb-3"
+    <input name="username" class="form-control mb-3"
            value="{{ investor.username }}">
 
     <button class="btn btn-success">Salvar alterações</button>
