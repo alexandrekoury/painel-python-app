@@ -41,16 +41,14 @@ def list_balances():
     else:
         query = query.limit(50)
 
-    user = session.get('user')
-    return render_template('exchange/balances.html', balances=balances, user=user, start_date=start_date, end_date=end_date, limit=limit)
+    return render_template('exchange/balances.html', balances=balances, start_date=start_date, end_date=end_date, limit=limit)
 
 @exchange_bp.route('/balance/edit/<int:balance_id>', methods=['GET'])
 @login_required
 @admin_required
 def edit_balance(balance_id):
     balance = ExchangeBalance.query.get_or_404(balance_id)
-    user = session.get('user')
-    return render_template('exchange/edit_balance.html', balance=balance, user=user)
+    return render_template('exchange/edit_balance.html', balance=balance)
 
 @exchange_bp.route('/balance/update/<int:balance_id>', methods=['POST'])
 @login_required
@@ -96,5 +94,4 @@ def get_consolidated_balances():
         query = query.limit(100)
 
     results = db.session.execute(query).fetchall()
-    user = session.get('user')
-    return render_template('exchange/consolidated.html', results=results, user=user, start_date=start_date, end_date=end_date, limit=limit)
+    return render_template('exchange/consolidated.html', results=results, start_date=start_date, end_date=end_date, limit=limit)
