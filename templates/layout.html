@@ -5,31 +5,66 @@
     <title>K2 Admin App</title>
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body class="bg-light">
 
 <nav class="navbar navbar-dark bg-dark mb-4">
-    <div class="container d-flex justify-content-between">
-        <a class="navbar-brand" href="/">K2 Admin App</a>
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <button class="btn btn-dark me-3" id="sidebarToggle" title="Toggle Sidebar">
+                <i class="bi bi-list"></i>
+            </button>
+            <a class="navbar-brand" href="/">K2 Admin App</a>
+        </div>
 
-        {% if user %}
+        {% if session.get('user') %}
         <div class="d-flex align-items-center">
 
-            {% if user.picture %}
-                <img src="{{ user.picture }}" width="36" height="36"
+            {% if session.get('user').picture %}
+                <img src="{{ session.get('user').picture }}" width="36" height="36"
                      style="border-radius: 50%;" class="me-2">
             {% endif %}
 
-            <span class="text-light me-3">{{ user.name }}</span>
+            <span class="text-light me-3">{{ session.get('user').name }}</span>
             <a href="/logout" class="btn btn-danger btn-sm">Sair</a>
         </div>
         {% endif %}
         
     </div>
 </nav>
-<div class="container">
-    {% block content %}{% endblock %}
+
+<div class="d-flex">
+    <aside class="sidebar bg-white border-end" id="sidebar">
+        <nav class="nav flex-column p-3">
+            <div class="sidebar-section">
+                <h6 class="sidebar-title">Investors</h6>
+                <a href="/investor" class="nav-link">
+                    <i class="bi bi-person-fill me-2"></i>Investors
+                </a>
+                <a href="/investor/transactions" class="nav-link">
+                    <i class="bi bi-clock-history me-2"></i>Investor Transactions
+                </a>
+            </div>
+
+            <div class="sidebar-section">
+                <h6 class="sidebar-title">Exchanges</h6>
+                <a href="/exchange/balances/consolidated" class="nav-link">
+                    <i class="bi bi-pie-chart-fill me-2"></i>Consolidated Balances
+                </a>
+                <a href="/exchange/balances" class="nav-link">
+                    <i class="bi bi-list-ul me-2"></i>Detailed Balances
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <main class="flex-grow-1">
+        <div class="container-fluid">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
 </div>
 
 <script src="{{ url_for('static', filename='script.js') }}"></script>
