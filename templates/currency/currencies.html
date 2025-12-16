@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h2 class="mb-4">Currencies List</h2>
+
+<form action="/currency/create" method="POST" class="card card-body mb-4">
+    <div class="row">
+        <div class="col-md-4">
+            <input name="code" class="form-control" placeholder="Code" required>
+        </div>
+        <div class="col-md-6">
+            <input name="name" class="form-control" placeholder="Name" required>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100">Adicionar</button>
+        </div>
+    </div>
+</form>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for currency in currencies %}
+        <tr>
+            <td>{{ currency.id }}</td>
+            <td>{{ currency.code }}</td>
+            <td>{{ currency.name }}</td>
+            <td>
+                <a href="/currency/edit/{{ currency.id }}" class="btn btn-warning btn-sm">Edit</a>
+                <button class="btn btn-danger btn-sm" onclick="deleteCurrency('{{ currency.id }}', '{{ currency.code }}')">Delete</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

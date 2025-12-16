@@ -33,3 +33,13 @@ function deleteTransaction(transactionId) {
             .catch(error => console.error('Error:', error));
     }
 }
+
+function deleteCurrency(id, code) {
+    if (confirm(`Are you sure you want to delete currency ${code}?`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/currency/delete/${id}`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}

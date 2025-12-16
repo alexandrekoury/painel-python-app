@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h2 class="mb-3">Editar Currency</h2>
+
+<form action="/currency/update/{{ currency.id }}" method="POST" class="card card-body">
+
+    <input name="code" class="form-control mb-3"
+           value="{{ currency.code }}" required>
+
+    <input name="name" class="form-control mb-3"
+           value="{{ currency.name }}" required>
+
+    <button class="btn btn-success">Salvar alterações</button>
+    <a href="/currency/currencies" class="btn btn-secondary ms-2">Cancelar</a>
+
+</form>
+
+{% endblock %}

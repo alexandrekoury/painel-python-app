@@ -1,0 +1,48 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h2 class="mb-4">Coin Prices</h2>
+
+<form method="get" class="mb-3 me-3 d-inline-flex gap-2">
+    <div>
+        <label for="start_date" class="form-label d-block mb-1">Start Date</label>
+        <input type="date" id="start_date" name="start_date" value="{{ start_date or '' }}" class="form-control">
+    </div>
+    <div>
+        <label for="end_date" class="form-label d-block mb-1">End Date</label>
+        <input type="date" id="end_date" name="end_date" value="{{ end_date or '' }}" class="form-control">
+    </div>
+    <div>
+        <label for="limit" class="form-label d-block mb-1">Limit</label>
+        <input type="number" id="limit" name="limit" value="{{ limit or '' }}" placeholder="Ex.: 50" class="form-control">
+    </div>
+    <button type="submit" class="btn btn-secondary align-self-end">Filter</button>
+    <a href="{{ url_for('currency.list_coin_prices') }}" class="btn btn-secondary align-self-end">Clear</a>
+</form>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Coin Currency</th>
+            <th>Quote Currency</th>
+            <th>Price</th>
+            <th>Date Updated</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for coin_price in coin_prices %}
+        <tr>
+            <td>{{ coin_price.id }}</td>
+            <td>{{ coin_price.coin_currency.code if coin_price.coin_currency else 'N/A' }}</td>
+            <td>{{ coin_price.quote_currency.code if coin_price.quote_currency else 'N/A' }}</td>
+            <td>{{ "{:,.8f}".format(coin_price.price) if coin_price.price else 'N/A' }}</td>
+            <td>{{ coin_price.datetime_update }}</td>
+            <td><a href="/currency/price/edit/{{ coin_price.id }}" class="btn btn-warning btn-sm">Editar</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
