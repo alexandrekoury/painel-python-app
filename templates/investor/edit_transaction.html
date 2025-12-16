@@ -1,0 +1,80 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h2 class="mb-4">Edit Transaction</h2>
+
+<form action="/investor/transactions/update/{{ transaction.id }}" method="POST" class="card card-body mb-4">
+    <div class="row">
+        <div class="col-md-6">
+            <label for="effective_datetime" class="form-label">Effective Date/Time</label>
+            <input name="effective_datetime" id="effective_datetime" type="datetime-local" class="form-control" value="{{ transaction.effective_datetime.strftime('%Y-%m-%dT%H:%M') }}" required>
+        </div>
+        <div class="col-md-6">
+            <label for="received_datetime" class="form-label">Received Date/Time</label>
+            <input name="received_datetime" id="received_datetime" type="datetime-local" class="form-control" value="{{ transaction.received_datetime.strftime('%Y-%m-%dT%H:%M') }}" required>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-md-4">
+            <label for="transaction_type" class="form-label">Transaction Type</label>
+            <select name="transaction_type" id="transaction_type" class="form-control" required>
+                <option value="">Select Type</option>
+                <option value="red_cash" {% if transaction.transaction_type == 'red_cash' %}selected{% endif %}>Red Cash</option>
+                <option value="red_kind" {% if transaction.transaction_type == 'red_kind' %}selected{% endif %}>Red Kind</option>
+                <option value="dep_cash" {% if transaction.transaction_type == 'dep_cash' %}selected{% endif %}>Dep Cash</option>
+                <option value="dep_kind" {% if transaction.transaction_type == 'dep_kind' %}selected{% endif %}>Dep Kind</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="investor_id" class="form-label">Investor</label>
+            <select name="investor_id" id="investor_id" class="form-control">
+                <option value="">Select Investor</option>
+                {% for investor in investors %}
+                <option value="{{ investor.id }}" {% if transaction.investor_id == investor.id %}selected{% endif %}>{{ investor.alias }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="transaction_nav" class="form-label">Transaction NAV</label>
+            <input name="transaction_nav" id="transaction_nav" type="number" step="0.01" class="form-control" value="{{ transaction.transaction_nav or '' }}">
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-md-4">
+            <label for="cash_amount" class="form-label">Cash Amount</label>
+            <input name="cash_amount" id="cash_amount" type="number" step="0.01" class="form-control" value="{{ transaction.cash_amount or '' }}">
+        </div>
+        <div class="col-md-4">
+            <label for="cash_currency_id" class="form-label">Cash Currency</label>
+            <select name="cash_currency_id" id="cash_currency_id" class="form-control">
+                <option value="">Select Currency</option>
+                {% for currency in currencies %}
+                <option value="{{ currency.id }}" {% if transaction.cash_currency_id == currency.id %}selected{% endif %}>{{ currency.name }} ({{ currency.code }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="kind_amount" class="form-label">Kind Amount</label>
+            <input name="kind_amount" id="kind_amount" type="number" step="0.01" class="form-control" value="{{ transaction.kind_amount or '' }}">
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <label for="kind_currency_id" class="form-label">Kind Currency</label>
+            <select name="kind_currency_id" id="kind_currency_id" class="form-control">
+                <option value="">Select Currency</option>
+                {% for currency in currencies %}
+                <option value="{{ currency.id }}" {% if transaction.kind_currency_id == currency.id %}selected{% endif %}>{{ currency.name }} ({{ currency.code }})</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <button type="submit" class="btn btn-primary">Update Transaction</button>
+            <a href="{{ url_for('investor.list_transactions') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </div>
+</form>
+
+{% endblock %}
