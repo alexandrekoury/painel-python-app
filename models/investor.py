@@ -13,7 +13,7 @@ class InvestorTransaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     effective_datetime = db.Column(db.DateTime)
     received_datetime = db.Column(db.DateTime)
-    transaction_type = db.Enum('red_cash', 'red_kind', 'dep_cash', 'dep_kind')
+    transaction_type = db.Column(db.Enum('red_cash', 'red_kind', 'dep_cash', 'dep_kind', name='transaction_type'))
     cash_amount = db.Column(db.Float)
     kind_amount = db.Column(db.Float)
     transaction_nav = db.Column(db.Float)
