@@ -3,7 +3,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from models import db
 from models.exchange import Exchange, Strategy, ExchangeBalance
-from models.currency import Currency
+from models.currency import Currency, CoinPrice
 from decorators.auth import login_required, admin_required
 from datetime import datetime
 from sqlalchemy import select, func
@@ -32,14 +32,12 @@ def list_balances():
             query = query.filter(func.date(ExchangeBalance.update_datetime) <= end_dt)
         except ValueError:
             pass
-    
-    balances = query.order_by(func.date(ExchangeBalance.update_datetime).desc())
-
     limit = request.args.get('limit', type=int)
+    
     if limit is not None:
-        query = query.limit(limit)
+        balances = query.order_by(func.date(ExchangeBalance.update_datetime).desc()).limit(limit)
     else:
-        query = query.limit(50)
+        balances = query.order_by(func.date(ExchangeBalance.update_datetime).desc()).limit(50)
 
     return render_template('exchange/balances.html', balances=balances, start_date=start_date, end_date=end_date, limit=limit)
 

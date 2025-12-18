@@ -26,3 +26,15 @@ class ExchangeBalance(db.Model):
     exchange = db.relationship('Exchange', foreign_keys=[exchange_id])
     currency = db.relationship('Currency', foreign_keys=[currency_id])
     strategy = db.relationship('Strategy', foreign_keys=[strategy_id])
+
+class CryptoTransaction(db.Model):
+    __tablename__="tbl_crypto_transactions"
+    id = db.Column(db.Integer, primary_key=True)
+    effective_date = db.Column(db.DateTime)
+    investor_id = db.Column(db.Integer, db.ForeignKey('tbl_investors.id'))
+    currency_id = db.Column(db.Integer, db.ForeignKey('tbl_currencies.id'))
+    amount = db.Column(db.Float)
+    price = db.Column(db.Float)
+    update_datetime = db.Column(db.DateTime)
+    investor = db.relationship('Investor', foreign_keys=[investor_id])
+    currency = db.relationship('Currency', foreign_keys=[currency_id])

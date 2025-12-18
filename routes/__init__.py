@@ -3,6 +3,7 @@ from routes.investor import investor_bp
 from routes.main import main_bp
 from routes.exchange import exchange_bp
 from routes.currency import currency_bp
+from routes.dashboard import dashboard_bp
 
 def register_blueprints(app):
     app.register_blueprint(auth_bp)
@@ -10,3 +11,4 @@ def register_blueprints(app):
     app.register_blueprint(main_bp)
     app.register_blueprint(exchange_bp)
     app.register_blueprint(currency_bp)
+    app.register_blueprint(dashboard_bp)

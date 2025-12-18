@@ -1,0 +1,254 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><i class="bi bi-graph-up-arrow me-2"></i>General Dashboard</h1>
+    <form method="get" class="d-flex gap-2 align-items-end">
+        <div>
+            <label for="start_date" class="form-label small mb-1">Start Date</label>
+            <input type="date" id="start_date" name="start_date" value="{{ start_date or '' }}" class="form-control form-control-sm">
+        </div>
+        <div>
+            <label for="end_date" class="form-label small mb-1">End Date</label>
+            <input type="date" id="end_date" name="end_date" value="{{ end_date or '' }}" class="form-control form-control-sm">
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-funnel me-1"></i>Filter
+        </button>
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-x-circle me-1"></i>Clear
+        </a>
+    </form>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-muted text-uppercase small mb-2">Total Profit</h6>
+                        <h3 class="mb-0 {% if data.total_profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ "{:,.2f}".format(data.total_profit) }}
+                        </h3>
+                    </div>
+                    <div class="bg-{% if data.total_profit >= 0 %}success{% else %}danger{% endif %} bg-opacity-10 rounded p-2">
+                        <i class="bi bi-{% if data.total_profit >= 0 %}arrow-up-circle{% else %}arrow-down-circle{% endif %} text-{% if data.total_profit >= 0 %}success{% else %}danger{% endif %} fs-4"></i>
+                    </div>
+                </div>
+                <small class="text-muted d-block mt-2">Balance Diff - Transactions - Crypto Variation</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-muted text-uppercase small mb-2">Balance Difference</h6>
+                        <h3 class="mb-0 {% if data.balance_difference.balance_difference >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ "{:,.2f}".format(data.balance_difference.balance_difference) }}
+                        </h3>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 rounded p-2">
+                        <i class="bi bi-wallet2 text-primary fs-4"></i>
+                    </div>
+                </div>
+                <small class="text-muted d-block mt-2">End: {{ "{:,.2f}".format(data.balance_difference.end_balance_sum) }}</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-muted text-uppercase small mb-2">Transactions</h6>
+                        <h3 class="mb-0 {% if data.transactions_difference.transactions_difference >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ "{:,.2f}".format(data.transactions_difference.transactions_difference) }}
+                        </h3>
+                    </div>
+                    <div class="bg-info bg-opacity-10 rounded p-2">
+                        <i class="bi bi-arrow-left-right text-info fs-4"></i>
+                    </div>
+                </div>
+                <small class="text-muted d-block mt-2">{{ data.investor_transactions|length }} transaction(s)</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-muted text-uppercase small mb-2">Crypto Variation</h6>
+                        <h3 class="mb-0 {% if data.crypto_variation.total_variation >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ "{:,.2f}".format(data.crypto_variation.total_variation) }}
+                        </h3>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 rounded p-2">
+                        <i class="bi bi-currency-bitcoin text-warning fs-4"></i>
+                    </div>
+                </div>
+                <small class="text-muted d-block mt-2">{{ data.crypto_variation.variations_by_currency|length }} currency(ies)</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Balance Details -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-bottom">
+        <h5 class="mb-0"><i class="bi bi-wallet2 me-2"></i>Balance Details</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="p-3 bg-light rounded">
+                    <small class="text-muted d-block mb-1">Start Balance</small>
+                    <h5 class="mb-0">{{ "{:,.2f}".format(data.balance_difference.start_balance_sum) }}</h5>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 bg-light rounded">
+                    <small class="text-muted d-block mb-1">End Balance</small>
+                    <h5 class="mb-0">{{ "{:,.2f}".format(data.balance_difference.end_balance_sum) }}</h5>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 bg-light rounded">
+                    <small class="text-muted d-block mb-1">Difference</small>
+                    <h5 class="mb-0 {% if data.balance_difference.balance_difference >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        {{ "{:,.2f}".format(data.balance_difference.balance_difference) }}
+                    </h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Investor Transactions -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-arrow-left-right me-2"></i>Investor Transactions</h5>
+        <span class="badge bg-secondary">{{ data.investor_transactions|length }} transaction(s)</span>
+    </div>
+    <div class="card-body p-0">
+        {% if data.investor_transactions %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="border-0">ID</th>
+                        <th class="border-0">Date/Time</th>
+                        <th class="border-0">Type</th>
+                        <th class="border-0 text-end">Cash Amount</th>
+                        <th class="border-0">Currency</th>
+                        <th class="border-0 text-end">Kind Amount</th>
+                        <th class="border-0">Kind Currency</th>
+                        <th class="border-0">Investor</th>
+                        <th class="border-0 text-end">NAV</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in data.investor_transactions %}
+                    <tr>
+                        <td><span class="badge bg-secondary">#{{ transaction.id }}</span></td>
+                        <td>{{ transaction.effective_datetime }}</td>
+                        <td>
+                            <span class="badge {% if transaction.transaction_type == 'Deposit' %}bg-success{% elif transaction.transaction_type == 'Withdrawal' %}bg-danger{% else %}bg-info{% endif %}">
+                                {{ transaction.transaction_type }}
+                            </span>
+                        </td>
+                        <td class="text-end fw-semibold">{{ "{:,.2f}".format(transaction.cash_amount) }}</td>
+                        <td><span class="badge bg-secondary">{{ transaction.cash_currency.code }}</span></td>
+                        <td class="text-end">{{ "{:,.4f}".format(transaction.kind_amount) if transaction.kind_amount else '-' }}</td>
+                        <td><span class="badge bg-secondary">{{ transaction.kind_currency.code if transaction.kind_currency else '-' }}</span></td>
+                        <td>{{ transaction.investor.alias if transaction.investor else '-' }}</td>
+                        <td class="text-end">{{ "{:,.4f}".format(transaction.transaction_nav) if transaction.transaction_nav else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+            <p>No transactions found for the selected period</p>
+        </div>
+        {% endif %}
+    </div>
+    <div class="card-footer bg-white border-top">
+        <small class="text-muted">
+            <strong>Total Difference:</strong> 
+            <span class="{% if data.transactions_difference.transactions_difference >= 0 %}text-success{% else %}text-danger{% endif %}">
+                {{ "{:,.2f}".format(data.transactions_difference.transactions_difference) }}
+            </span>
+        </small>
+    </div>
+</div>
+
+<!-- Crypto Variation -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-currency-bitcoin me-2"></i>Crypto Variation</h5>
+        <span class="badge bg-secondary">{{ data.crypto_variation.variations_by_currency|length }} currency(ies)</span>
+    </div>
+    <div class="card-body p-0">
+        {% if data.crypto_variation.variations_by_currency %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="border-0">Currency</th>
+                        <th class="border-0 text-end">Amount</th>
+                        <th class="border-0 text-end">Start Price</th>
+                        <th class="border-0 text-end">End Price</th>
+                        <th class="border-0 text-end">Price Change</th>
+                        <th class="border-0 text-end">Variation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for variation in data.crypto_variation.variations_by_currency %}
+                    <tr>
+                        <td>
+                            <span class="badge bg-warning text-dark">{{ variation.currency_code }}</span>
+                        </td>
+                        <td class="text-end">{{ "{:,.4f}".format(variation.amount) }}</td>
+                        <td class="text-end">{{ "{:,.2f}".format(variation.start_price) }}</td>
+                        <td class="text-end">{{ "{:,.2f}".format(variation.end_price) }}</td>
+                        <td class="text-end">
+                            {% set price_change = variation.end_price - variation.start_price %}
+                            {% set price_change_pct = ((variation.end_price - variation.start_price) / variation.start_price * 100) if variation.start_price > 0 else 0 %}
+                            <span class="{% if price_change >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                {{ "{:+,.2f}".format(price_change) }} 
+                                <small>({{ "{:+.2f}".format(price_change_pct) }}%)</small>
+                            </span>
+                        </td>
+                        <td class="text-end fw-semibold {% if variation.variation >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ "{:+,.2f}".format(variation.variation) }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+            <p>No crypto variations found for the selected period</p>
+        </div>
+        {% endif %}
+    </div>
+    <div class="card-footer bg-white border-top">
+        <small class="text-muted">
+            <strong>Total Variation:</strong> 
+            <span class="{% if data.crypto_variation.total_variation >= 0 %}text-success{% else %}text-danger{% endif %}">
+                {{ "{:,.2f}".format(data.crypto_variation.total_variation) }}
+            </span>
+        </small>
+    </div>
+</div>
+
+{% endblock %}
