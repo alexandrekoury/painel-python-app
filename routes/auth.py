@@ -1,4 +1,4 @@
-from flask import Blueprint, redirect, url_for, session
+from flask import Blueprint, redirect, url_for, session, render_template
 from authlib.integrations.flask_client import OAuth
 from flask_limiter.util import get_remote_address
 from models import db
@@ -25,6 +25,13 @@ def init_oauth(app):
 
 @auth_bp.route("/login")
 def login():
+    # Check if user is already logged in
+    if "user" in session:
+        return redirect(url_for("main.index"))
+    return render_template("login.html")
+
+@auth_bp.route("/login/google")
+def login_google():
     redirect_uri = url_for("auth.auth_google", _external=True)
     return google.authorize_redirect(redirect_uri)
 
