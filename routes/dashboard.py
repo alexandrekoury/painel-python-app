@@ -6,7 +6,6 @@ from models.investor import InvestorTransaction
 from models.currency import CoinPrice
 from sqlalchemy import func
 from datetime import datetime, timedelta
-from services import get_balance_difference
 import requests
 
 dashboard_bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
