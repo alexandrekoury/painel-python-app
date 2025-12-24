@@ -16,6 +16,15 @@
         <label for="limit" class="form-label d-block mb-1">Limit</label>
         <input type="number" id="limit" name="limit" value="{{ limit or '' }}" placeholder="Ex.: 50" class="form-control">
     </div>
+    <div>
+        <label for="exchange_id" class="form-label d-block mb-1">Exchange</label>
+        <select id="exchange_id" name="exchange_id" class="form-control">
+            <option value="">All Exchanges</option>
+            {% for exchange in exchanges %}
+                <option value="{{ exchange.id }}" {% if exchange.id == 'exchange_id' %}selected{% endif %}>{{ exchange.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
     <button type="submit" class="btn btn-secondary align-self-end">Filter</button>
     <a href="{{ url_for('exchange.list_balances') }}" class="btn btn-secondary align-self-end">Clear</a>
 </form>
@@ -40,7 +49,7 @@
             <td>{{ "{:,.2f}".format(balance.balance) }}</td>
             <td>{{ balance.currency.code }}</td>
             <td>{{ balance.update_datetime }}</td>
-            <td><a href="/exchange/balance/edit/{{ balance.id }}" class="btn btn-warning btn-sm">Editar</a></td>
+            <td><a href="{{ url_for('exchange.edit_balance', balance_id=balance.id, start_date=start_date or '', end_date=end_date or '', exchange_id=request.args.get('exchange_id') or '', limit=limit or '') }}" class="btn btn-warning btn-sm">Edit</a></td>
         </tr>
         {% endfor %}
     </tbody>

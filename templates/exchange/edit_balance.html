@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block content %}
 
-<h2 class="mb-3">Editar Balance</h2>
+<h2 class="mb-3">Edit Balance</h2>
 
 <form action="/exchange/balance/update/{{ balance.id }}" method="POST" class="card card-body">
 
@@ -12,9 +12,13 @@
 
     <input name="update_datetime" class="form-control mb-3"
            value="{{ balance.update_datetime }}" required>
+    <input name="start_date" type="hidden" value="{{ start_date or '' }}">
+    <input name="end_date" type="hidden" value="{{ end_date or '' }}">
+    <input name="exchange_id" type="hidden" value="{{ exchange_id or '' }}">
+    <input name="limit" type="hidden" value="{{ limit or '' }}">
 
-    <button class="btn btn-success">Salvar alterações</button>
-    <a href="/" class="btn btn-secondary ms-2">Cancelar</a>
+    <button class="btn btn-success">Save Balance</button>
+    <a href="{{ url_for('exchange.list_balances', start_date=start_date or '', end_date=end_date or '', exchange_id=exchange_id or '', limit=limit or '') }}" class="btn btn-secondary ms-2">Cancel</a>
 
 </form>
 

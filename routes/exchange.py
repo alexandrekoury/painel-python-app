@@ -2,8 +2,8 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from models import db
-from models.exchange import Exchange, Strategy, ExchangeBalance
-from models.currency import Currency, CoinPrice
+from models.exchange import ExchangeBalance, Exchange
+from models.currency import Currency
 from decorators.auth import login_required, admin_required
 from datetime import datetime
 from sqlalchemy import select, func
@@ -15,6 +15,7 @@ limiter = Limiter(key_func=get_remote_address)
 @login_required
 @admin_required
 def list_balances():
+    exchanges = Exchange.query.order_by(Exchange.name).all()
     query = ExchangeBalance.query
 
     start_date = request.args.get('start_date')
@@ -32,6 +33,10 @@ def list_balances():
             query = query.filter(func.date(ExchangeBalance.update_datetime) <= end_dt)
         except ValueError:
             pass
+
+    exchange_id = request.args.get('exchange_id', type=int)
+    if exchange_id:
+        query = query.filter(ExchangeBalance.exchange_id == exchange_id)
     limit = request.args.get('limit', type=int)
     
     if limit is not None:
@@ -39,14 +44,22 @@ def list_balances():
     else:
         balances = query.order_by(func.date(ExchangeBalance.update_datetime).desc()).limit(50)
 
-    return render_template('exchange/balances.html', balances=balances, start_date=start_date, end_date=end_date, limit=limit)
+    return render_template('exchange/balances.html', exchanges=exchanges, balances=balances, start_date=start_date, end_date=end_date, limit=limit)
 
 @exchange_bp.route('/balance/edit/<int:balance_id>', methods=['GET'])
 @login_required
 @admin_required
 def edit_balance(balance_id):
     balance = ExchangeBalance.query.get_or_404(balance_id)
-    return render_template('exchange/edit_balance.html', balance=balance)
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    exchange_id = request.args.get('exchange_id')
+    limit = request.args.get('limit')
+    return render_template('exchange/edit_balance.html', balance=balance, 
+                           start_date=start_date, 
+                           end_date=end_date, 
+                           exchange_id=exchange_id, 
+                           limit=limit)
 
 @exchange_bp.route('/balance/update/<int:balance_id>', methods=['POST'])
 @login_required
@@ -55,8 +68,16 @@ def update_balance(balance_id):
     balance = ExchangeBalance.query.get_or_404(balance_id)
     balance.balance = request.form['balance']
     balance.update_datetime = request.form['update_datetime']
+    start_date = request.form.get('start_date')
+    end_date = request.form.get('end_date')
+    exchange_id = request.form.get('exchange_id')
+    limit = request.form.get('limit')
     db.session.commit()
-    return redirect(url_for('exchange.list_balances'))
+    return redirect(url_for('exchange.list_balances', 
+                            start_date=start_date or '', 
+                            end_date=end_date or '', 
+                            exchange_id=exchange_id or '', 
+                            limit=limit or ''))
 
 @exchange_bp.route('/balances/consolidated', methods=['GET'])
 @login_required
