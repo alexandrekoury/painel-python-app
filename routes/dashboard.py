@@ -1,5 +1,5 @@
 from decorators.auth import login_required, admin_required
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, current_app
 from models import db
 from models.exchange import ExchangeBalance, CryptoTransaction
 from models.investor import InvestorTransaction
@@ -15,37 +15,82 @@ dashboard_bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 @login_required
 @admin_required
 def index():
-
     start_date_param = request.args.get('start_date')
     end_date_param = request.args.get('end_date')
     default_start_date = datetime.now().replace(day=1).strftime('%Y-%m-%d')
     default_end_date = (datetime.now()-timedelta(days=1)).strftime('%Y-%m-%d')
     
-    if start_date_param:
-        start_date = start_date_param
-    else:
-        start_date = default_start_date
+    start_date = start_date_param or default_start_date
+    end_date = end_date_param or default_end_date
     
-    if end_date_param:
-        end_date = end_date_param
-    else:
-        end_date = default_end_date
-    
-    balance_difference = calculate_balance_difference(start_date=start_date, end_date=end_date)[0].json
-    investor_transactions_data = calculate_investor_transactions(start_date=start_date, end_date=end_date)
-    transactions_difference = investor_transactions_data[0].json
-    investor_transactions = investor_transactions_data[1]
-    crypto_variation = calculate_crypto_variation(start_date=start_date, end_date=end_date)[0].json
-    total_profit = balance_difference['balance_difference']- transactions_difference['transactions_difference'] - crypto_variation['total_variation']
-    data = {
-        'balance_difference': balance_difference,
-        'transactions_difference': transactions_difference,
-        'investor_transactions': investor_transactions,
-        'crypto_variation': crypto_variation,
-        'total_profit': total_profit
-    }
+    return render_template('dashboard/index.html', start_date=start_date, end_date=end_date)
 
-    return render_template('dashboard/index.html', data=data, start_date=start_date, end_date=end_date)
+
+@dashboard_bp.route('/api/balance', methods=['GET'])
+@login_required
+@admin_required
+def api_balance():
+    """Fetch balance difference data as JSON"""
+    try:
+        start_date = request.args.get('start_date', datetime.now().replace(day=1).strftime('%Y-%m-%d'))
+        end_date = request.args.get('end_date', (datetime.now()-timedelta(days=1)).strftime('%Y-%m-%d'))
+        
+        data = calculate_balance_difference(start_date=start_date, end_date=end_date)[0].json
+        return jsonify({'success': True, 'data': data})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e), 'data': None}), 500
+
+
+@dashboard_bp.route('/api/transactions', methods=['GET'])
+@login_required
+@admin_required
+def api_transactions():
+    """Fetch investor transactions data as JSON"""
+    try:
+        start_date = request.args.get('start_date', datetime.now().replace(day=1).strftime('%Y-%m-%d'))
+        end_date = request.args.get('end_date', (datetime.now()-timedelta(days=1)).strftime('%Y-%m-%d'))
+        
+        transactions_diff, investor_transactions, _ = calculate_investor_transactions(
+            start_date=start_date, 
+            end_date=end_date
+        )
+        transactions_data = transactions_diff.json
+        
+        # Serialize investor transactions
+        serialized_transactions = []
+        for tx in investor_transactions:
+            serialized_transactions.append({
+                'id': tx.id,
+                'effective_datetime': str(tx.effective_datetime),
+                'transaction_type': tx.transaction_type,
+                'cash_amount': float(tx.cash_amount),
+                'cash_currency_code': tx.cash_currency.code if tx.cash_currency else None,
+                'kind_amount': float(tx.kind_amount) if tx.kind_amount else None,
+                'kind_currency_code': tx.kind_currency.code if tx.kind_currency else None,
+                'investor_alias': tx.investor.alias if tx.investor else None,
+                'transaction_nav': float(tx.transaction_nav) if tx.transaction_nav else None
+            })
+        
+        transactions_data['investor_transactions'] = serialized_transactions
+        return jsonify({'success': True, 'data': transactions_data})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e), 'data': None}), 500
+
+
+@dashboard_bp.route('/api/crypto-variation', methods=['GET'])
+@login_required
+@admin_required
+def api_crypto_variation():
+    """Fetch crypto variation data as JSON"""
+    try:
+        start_date = request.args.get('start_date', datetime.now().replace(day=1).strftime('%Y-%m-%d'))
+        end_date = request.args.get('end_date', (datetime.now()-timedelta(days=1)).strftime('%Y-%m-%d'))
+        
+        data = calculate_crypto_variation(start_date=start_date, end_date=end_date)[0].json
+        
+        return jsonify({'success': True, 'data': data})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e), 'data': None}), 500
 
 def calculate_investor_transactions(start_date: str, end_date: str):
 
@@ -92,19 +137,29 @@ def calculate_balance_difference(start_date: str, end_date: str):
         'balance_difference': float(balance_difference)
     }), 200
 
-def _get_coin_price(currency_id: int, target_date: str = None, max_date: str = None, order_desc: bool = False) -> float:
+def _get_coin_price(currency_id: int, target_date: str = None, max_date: str = None, order_desc: bool = False, price_cache: dict = None) -> float:
     """
     Helper function to fetch coin price for a specific currency and date.
+    Uses local cache to avoid redundant DB queries.
     
     Args:
         currency_id: The currency ID to fetch price for
         target_date: Exact date to match
         max_date: Maximum date (inclusive) to search up to
         order_desc: If True, get most recent price on or before date
+        price_cache: Optional dict to cache results during calculation
     
     Returns:
         The price as float, or 0.0 if not found
     """
+    if price_cache is None:
+        price_cache = {}
+    
+    # Create cache key
+    cache_key = f"{currency_id}_{target_date or max_date}_{order_desc}"
+    if cache_key in price_cache:
+        return price_cache[cache_key]
+    
     query = db.session.query(CoinPrice.price).filter(
         CoinPrice.coin_currency_id == currency_id
     )
@@ -118,17 +173,18 @@ def _get_coin_price(currency_id: int, target_date: str = None, max_date: str = N
         query = query.order_by(CoinPrice.datetime_update.desc()).limit(1)
     
     result = query.scalar()
-    return float(result) if result else 0.0
+    price = float(result) if result else 0.0
+    price_cache[cache_key] = price
+    return price
 
 
-def _calculate_initial_state(currency_id: int, start_date: str) -> tuple:
+def _calculate_initial_state(currency_id: int, start_date: str, price_cache: dict = None) -> tuple:
     """
     Calculate holdings amount and cost basis before start_date using average cost method.
     
     Returns:
-        Tuple of (amounts_before, cost_basis_before, avg_price_start)
+        Tuple of (amounts_before, cost_basis_before)
     """
-    
     
     total_amount = db.session.query(func.sum(CryptoTransaction.amount)).filter(
         func.date(CryptoTransaction.effective_date) < start_date,
@@ -136,14 +192,13 @@ def _calculate_initial_state(currency_id: int, start_date: str) -> tuple:
     ).scalar() or 0.0
     
     cost_basis = 0.0
-    avg_price = 0.0
     amount = 0.0
 
     if total_amount > 0:
         transactions_before = db.session.query(CryptoTransaction).filter(
-        func.date(CryptoTransaction.effective_date) < start_date,
-        CryptoTransaction.currency_id == currency_id
-    ).order_by(CryptoTransaction.effective_date).all()
+            func.date(CryptoTransaction.effective_date) < start_date,
+            CryptoTransaction.currency_id == currency_id
+        ).order_by(CryptoTransaction.effective_date).all()
         
         for tx in transactions_before:
             if tx.amount > 0:
@@ -159,7 +214,6 @@ def _calculate_initial_state(currency_id: int, start_date: str) -> tuple:
                         cost_basis = 0.0
                         amount = 0.0
     
-       # avg_price = (cost_basis / amount) if amount > 0 else 0.0
     return amount, cost_basis
 
 
@@ -167,18 +221,20 @@ def calculate_crypto_variation(start_date: str, end_date: str):
     """
     Calculate the value variation of crypto holdings between two dates.
     Accounts for additions and removals using average cost method.
+    Optimized with price caching to reduce DB queries.
     """
     
-    currencies = db.session.query(Currency).all()
+    # Initialize price cache for this entire calculation
+    price_cache = {}
+    
+    currencies = db.session.query(Currency).filter(
+        Currency.code.notin_(['USD', 'BRL'])  # Filter fiat currencies at DB level
+    ).all()
+    
     variations_by_currency = []
     total_variation = 0.0
     
     for currency in currencies:
-        if currency.code in ('USD', 'BRL'):
-            continue  # Skip fiat currencies
-        
-        print(currency.code)
-        
         # Fetch data for this currency
         transactions_in_period = db.session.query(CryptoTransaction).filter(
             func.date(CryptoTransaction.effective_date) >= start_date,
@@ -188,19 +244,20 @@ def calculate_crypto_variation(start_date: str, end_date: str):
         
         # Calculate initial state before start_date
         amounts_before_start_date, cost_basis_before = _calculate_initial_state(
-            currency.id, start_date
+            currency.id, start_date, price_cache
         )
-        print(f"amount before: {amounts_before_start_date}")
         
-        # Get prices for the period
-        start_price_previous = _get_coin_price(currency.id, target_date=start_date)
-        print(f"start price previous: {start_price_previous}")
-        end_price = _get_coin_price(currency.id, target_date=end_date)
+        # Get prices for the period with caching
+        start_price_previous = _get_coin_price(currency.id, target_date=start_date, price_cache=price_cache)
+        end_price = _get_coin_price(currency.id, target_date=end_date, price_cache=price_cache)
+        
+        # Skip if no holdings before and no transactions during period
+        if amounts_before_start_date == 0 and len(transactions_in_period) == 0:
+            continue
         
         # Calculate variation on holdings that existed before the period
         variation_previous = float(amounts_before_start_date) * (float(end_price) - float(start_price_previous))
-        print(f"  Variation previous holdings: {variation_previous}")
-        
+            
         # Process transactions during the period
         currency_total_variation = variation_previous
         holdings_data = []
@@ -209,7 +266,6 @@ def calculate_crypto_variation(start_date: str, end_date: str):
         current_cost_basis = cost_basis_before if amounts_before_start_date > 0 else 0.0
         
         for tx in transactions_in_period:
-            print(f"Transaction: {tx.id} {tx.effective_date} {tx.amount} {tx.price}")
             tx_date_str = tx.effective_date.strftime('%Y-%m-%d') if hasattr(tx.effective_date, 'strftime') else str(tx.effective_date)
             
             # Update holdings and average price
@@ -227,23 +283,21 @@ def calculate_crypto_variation(start_date: str, end_date: str):
                     current_cost_basis = 0.0
                 else:
                     current_cost_basis = current_cost_basis * (1 + tx.amount / (amounts_before_start_date + total_held - tx.amount))
-            
+                
             # Calculate variation for this transaction
             measurement_start = max(start_date, tx_date_str)
             
             if measurement_start <= end_date and total_held > 0:
-                # Get price at measurement start
+                # Get price at measurement start with caching
                 price_at_measurement_start = (
-                    _get_coin_price(currency.id, max_date=measurement_start, order_desc=True)
+                    _get_coin_price(currency.id, max_date=measurement_start, order_desc=True, price_cache=price_cache)
                     if measurement_start < start_date
                     else tx.price
                 )
                 
                 # Calculate variation: amount × (end_price - price_when_held)
                 tx_variation = float(tx.amount) * (float(end_price) - float(price_at_measurement_start))
-                print(f"  Variation for this tx: {tx_variation}")
                 currency_total_variation += tx_variation
-                print(f"  Total variation so far for currency: {currency_total_variation}")
                 
                 holdings_data.append({
                     'transaction_date': tx_date_str,
@@ -256,7 +310,6 @@ def calculate_crypto_variation(start_date: str, end_date: str):
                     'avg_price_after_tx': float(current_avg_price)
                 })
         
-        print(f"  Variation with previous holdings: {currency_total_variation}")
         total_variation += currency_total_variation
         
         variations_by_currency.append({
@@ -269,7 +322,6 @@ def calculate_crypto_variation(start_date: str, end_date: str):
             'holdings_details': holdings_data
         })
     
-    print(f"Total variation overall: {total_variation}")
     return jsonify({
         'start_date': start_date,
         'end_date': end_date,
