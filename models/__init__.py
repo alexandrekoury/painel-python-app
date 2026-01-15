@@ -6,3 +6,4 @@ from models.user import User
 from models.investor import Investor, InvestorTransaction
 from models.currency import Currency, CoinPrice
 from models.exchange import Exchange, Strategy, ExchangeBalance
+from models.instrument import InstrumentClosingPrice
