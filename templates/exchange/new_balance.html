@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h2 class="mb-3">New Balance</h2>
+
+<form action="{{ url_for('exchange.create_balance') }}" method="POST" class="card card-body">
+
+    <label for="exchange_id" class="form-label">Exchange</label>
+    <select name="exchange_id" class="form-control mb-3" required>
+        <option value="">Select Exchange</option>
+        {% for exchange in exchanges %}
+            <option value="{{ exchange.id }}">{{ exchange.name }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="strategy_id" class="form-label">Strategy</label>
+    <select name="strategy_id" class="form-control mb-3" required>
+        <option value="">Select Strategy</option>
+        {% for strategy in strategies %}
+            <option value="{{ strategy.id }}">{{ strategy.name }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="currency_id" class="form-label">Currency</label>
+    <select name="currency_id" class="form-control mb-3" required>
+        <option value="">Select Currency</option>
+        {% for currency in currencies %}
+            <option value="{{ currency.id }}">{{ currency.code }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="balance" class="form-label">Balance</label>
+    <input name="balance" type="number" step="0.01" class="form-control mb-3" required>
+
+    <label for="update_datetime" class="form-label">Date</label>
+    <input name="update_datetime" type="datetime-local" class="form-control mb-3" required>
+
+    <div>
+        <button class="btn btn-success">Create Balance</button>
+        <a href="{{ url_for('exchange.list_balances') }}" class="btn btn-secondary ms-2">Cancel</a>
+    </div>
+
+</form>
+
+{% endblock %}

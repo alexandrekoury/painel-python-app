@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from models import db
-from models.exchange import ExchangeBalance, Exchange
+from models.exchange import ExchangeBalance, Exchange, Strategy
 from models.currency import Currency
 from decorators.auth import login_required, admin_required
 from datetime import datetime
@@ -78,6 +78,30 @@ def update_balance(balance_id):
                             end_date=end_date or '', 
                             exchange_id=exchange_id or '', 
                             limit=limit or ''))
+
+@exchange_bp.route('/balance/new', methods=['GET'])
+@login_required
+@admin_required
+def new_balance():
+    exchanges = Exchange.query.order_by(Exchange.name).all()
+    strategies = Strategy.query.order_by(Strategy.name).all()
+    currencies = Currency.query.order_by(Currency.code).all()
+    return render_template('exchange/new_balance.html', exchanges=exchanges, strategies=strategies, currencies=currencies)
+
+@exchange_bp.route('/balance/create', methods=['POST'])
+@login_required
+@admin_required
+def create_balance():
+    balance = ExchangeBalance(
+        balance=request.form['balance'],
+        update_datetime=request.form['update_datetime'],
+        exchange_id=request.form['exchange_id'],
+        strategy_id=request.form['strategy_id'],
+        currency_id=request.form['currency_id']
+    )
+    db.session.add(balance)
+    db.session.commit()
+    return redirect(url_for('exchange.list_balances'))
 
 @exchange_bp.route('/balances/consolidated', methods=['GET'])
 @login_required
