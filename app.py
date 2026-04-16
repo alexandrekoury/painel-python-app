@@ -16,7 +16,7 @@ app.config['GOOGLE_CLIENT_ID'] = GOOGLE_CLIENT_ID
 app.config['GOOGLE_CLIENT_SECRET'] = GOOGLE_CLIENT_SECRET
 
 # Session security
-app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_SECURE'] = ENV_TYPE != "dev"
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600
